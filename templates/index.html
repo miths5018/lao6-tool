@@ -1,282 +1,287 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>TXT 去重工具</title>
+<title>即时工具平台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-html, body {
-  margin:0;
-  padding:0;
-  font-family:Arial,sans-serif;
-  height:100%;
-  color:#fff;
-  overflow:hidden; /* 背景固定 */
-}
-body {
-  display:flex;
-  justify-content:flex-start;
-}
-
-/* ===== 背景动画 ===== */
-.bg-container {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:url('{{ bg_url }}?t={{ timestamp }}') no-repeat center center;
-  background-size:cover;
-  z-index:-999;
-  animation:floatBG 60s linear infinite alternate;
-}
-@keyframes floatBG {
-  0%{transform:translate(0,0) scale(1);}
-  25%{transform:translate(-1vw,0.5vh) scale(1.01);}
-  50%{transform:translate(-2vw,1vh) scale(1.02);}
-  75%{transform:translate(-1vw,0.5vh) scale(1.01);}
-  100%{transform:translate(0,0) scale(1);}
-}
-
-/* ===== 主容器可滚动 ===== */
-.container {
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-start;
-  padding:4vh 4vw;
-  background:rgba(0,0,0,0.55);
-  border-radius:20px;
-  border:1px solid rgba(255,255,255,0.15);
-  backdrop-filter:blur(8px);
-  box-shadow:0 8px 25px rgba(0,0,0,0.6);
-  position:absolute;
-  left:0;
-  width:40%;
-  min-width:300px;
-  max-width:40%;
-  z-index:10;
-  overflow-y:auto;        /* ✅ 允许垂直滚动 */
-  max-height:90vh;       /* ✅ 限制高度不超出屏幕 */
-  scroll-behavior:smooth; /* 平滑滚动 */
-}
-
-/* ===== 标题与特效 ===== */
-.container h1 {
-  margin:0 0 3vh;
-  font-size:clamp(32px,5vw,60px);
-  color:#fff;
-  text-shadow:2px 2px 6px rgba(0,0,0,0.7);
-  border-bottom:3px solid #ffd700;
-  padding-bottom:1vh;
-  position:relative;
-  animation:glow 3s ease-in-out infinite;
-}
-@keyframes glow {
-  0%,100%{border-color:rgba(255,215,0,0.4);}
-  50%{border-color:rgba(255,215,0,1);}
-}
-
-/* ===== 每个模块 ===== */
-.section {
-  background:rgba(255,255,255,0.1);
-  border-radius:12px;
-  box-shadow:0 0 12px rgba(0,0,0,0.4);
-  padding:2.5vh;
-  display:flex;
-  flex-direction:column;
-  gap:2vh;
-  transition:transform 0.2s ease;
-  margin-bottom:20px;
-}
-.section:hover { transform:translateY(-2px); }
-
-h2 { color:#ffd700; text-shadow:1px 1px 2px #000; margin:0; font-size:clamp(22px,3vw,40px); }
-input[type="file"], button {
-  width:100%;
-  box-sizing:border-box;
-  font-size:clamp(16px,1.8vw,22px);
-  padding:clamp(8px,1.5vh,14px);
-  border-radius:6px;
-  border:none;
-}
-button {
-  background:linear-gradient(45deg,#ff7f50,#ff4500);
-  color:#fff;
-  cursor:pointer;
-  transition:0.3s;
-  font-weight:bold;
-  border:2px solid transparent;
-  animation:pulse 3s infinite;
-}
-button:hover { background:linear-gradient(45deg,#ff4500,#ff7f50); transform:scale(1.05); }
-@keyframes pulse {
-  0%{border-color:rgba(255,215,0,0.2); box-shadow:0 0 5px rgba(255,215,0,0.3);}
-  50%{border-color:rgba(255,215,0,0.9); box-shadow:0 0 15px rgba(255,215,0,0.6);}
-  100%{border-color:rgba(255,215,0,0.2); box-shadow:0 0 5px rgba(255,215,0,0.3);}
-}
-
-p { margin:0; font-size:clamp(16px,2vw,22px); }
-#downloadBtn,#downloadABtn,#downloadBBtn,#downloadUsernameBtn {
-  display:none;
-  background:linear-gradient(45deg,#32cd32,#228b22);
-}
-
-/* ===== 进度条样式 ===== */
-.progress-container {
-  width:100%;
-  background:rgba(255,255,255,0.15);
-  border-radius:5px;
-  overflow:hidden;
-  margin-top:5px;
-}
-.progress-bar {
-  display:none;
-  height:20px;
-  background:linear-gradient(90deg,#32cd32,#228b22);
-  text-align:center;
-  color:#fff;
-  font-size:14px;
-  border-radius:5px;
-  transition:width 0.3s ease;
-}
-.info { margin-top:5px; }
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,Segoe UI;background:#f6f7fb;color:#333;}
+.topbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:16px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.logo{font-size:20px;font-weight:700;color:#1677ff;display:flex;align-items:center;gap:8px;}
+.logo img{width:32px;height:32px;border-radius:6px;}
+.search{flex:1;max-width:420px;padding:8px 14px;border-radius:20px;border:1px solid #ddd;font-size:14px;}
+.top-actions{display:flex;align-items:center;gap:12px;}
+.btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:18px;font-size:13px;border:1px solid #ddd;background:#fff;cursor:pointer;height:36px;white-space: nowrap;overflow: visible;}
+.btn img{width:16px;height:16px;flex-shrink:0;}
+.btn.primary{background:#1677ff;color:#fff;border:none;}
+.layout{display:flex;height:calc(100% - 64px);}
+.sidebar{width:220px;background:#fff;border-right:1px solid #eee;padding:16px;}
+.sidebar a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;text-decoration:none;color:#444;margin-bottom:6px;}
+.sidebar a img{width:20px;height:20px;}
+.sidebar a.active,.sidebar a:hover{background:#eaf2ff;color:#1677ff;}
+.content{flex:1;padding:24px;overflow:auto;}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:24px;background:#fff;padding:28px;border-radius:20px;margin-bottom:32px;}
+.hero-text h1{margin:0;font-size:28px;}
+.hero-text p{margin-top:8px;color:#666;}
+.hero-banner{width:380px;height:160px;border-radius:14px;overflow:hidden;}
+.hero-banner img{width:100%;height:100%;object-fit:cover;display:none;}
+.hero-banner img.active{display:block;}
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;}
+.tool-card{background:#fff;border-radius:18px;padding:22px;cursor:pointer;border:1px solid #f0f0f0;transition:.25s;display:flex;flex-direction:column;gap:12px;}
+.tool-card img{width:40px;height:40px;border-radius:6px;}
+.tool-card h3{margin:0;font-size:16px;}
+.tool-card p{margin-top:0;font-size:13px;color:#666;}
+.tool-card:hover{border-color:#1677ff;box-shadow:0 8px 24px rgba(22,119,255,.12);transform:translateY(-4px);}
+.stats-row{display:flex;gap:20px;margin-top:32px;}
+.stat{background:#fff;padding:16px 20px;border-radius:14px;font-size:13px;display:flex;align-items:center;gap:8px;}
+.stat img{width:24px;height:24px;}
+.stat strong{font-size:20px;margin-right:6px;}
+.drawer{position:fixed;top:0;right:-520px;width:520px;height:100%;background:#fff;box-shadow:-8px 0 24px rgba(0,0,0,.15);transition:.3s;z-index:100;display:flex;flex-direction:column;}
+.drawer.show{right:0;}
+.drawer-header{padding:20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;}
+.drawer-body{padding:20px;overflow:auto;}
+.close{cursor:pointer;}
+input[type=file],button{width:100%;padding:10px;margin-top:10px;border-radius:6px;border:1px solid #ccc;}
+button{background:#1677ff;color:#fff;border:none;cursor:pointer;}
+.progress-container{background:#ddd;border-radius:6px;overflow:hidden;margin-top:10px;}
+.progress-bar{height:20px;width:0;background:#1677ff;color:#fff;text-align:center;font-size:12px;}
+.download{display:none;margin-top:10px;background:#1677ff;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer;}
+.info{font-size:13px;margin-top:6px;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:200;}
+.modal.show{display:flex;}
+.modal-box{width:360px;background:#fff;border-radius:16px;padding:24px;}
+.modal-box h3{text-align:center;margin-top:0;}
+.modal-box input{width:100%;padding:10px;margin-top:12px;border:1px solid #ccc;border-radius:6px;font-size:14px;}
+.modal-box button{margin-top:16px;padding:10px;border-radius:6px;border:none;width:100%;background:#1677ff;color:#fff;cursor:pointer;font-size:14px;}
+@media(max-width:900px){.hero{flex-direction:column;}.hero-banner{width:100%;}.stats-row{flex-direction:column;}.search{max-width:100%;flex:unset;width:100%;margin:8px 0;}}
 </style>
 </head>
-
 <body>
-<div class="bg-container"></div>
-<div class="container">
-<h1>📂 TXT 去重工具</h1>
 
-<!-- 上传背景 -->
-<div class="section">
-<h2>🎨 上传自定义背景图</h2>
-<form action="/upload_bg" method="post" enctype="multipart/form-data">
-<input type="file" name="bg_file" accept="image/*" required>
-<button type="submit">上传背景</button>
-</form>
+<header class="topbar">
+  <div class="logo"><img src="/static/icons/logo.png" alt="logo">即时工具</div>
+  <input class="search" placeholder="搜索工具 / 功能">
+  <div class="top-actions">
+    <button class="btn"><img src="/static/icons/discount.png">会员特价</button>
+    <button class="btn"><img src="/static/icons/download.png">客户端下载</button>
+    <button class="btn primary" onclick="openLogin()"><img src="/static/icons/login.png">登录 / 注册</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <a class="active"><img src="/static/icons/home.png">首页</a>
+    <a><img src="/static/icons/tools.png">实用工具</a>
+    <a><img src="/static/icons/file.png">文件处理</a>
+  </aside>
+
+  <main class="content">
+    <div class="hero">
+      <div class="hero-text">
+        <h1>高效 · 批量 · 即时处理</h1>
+        <p>文件合并、对比、去重，一站式完成</p>
+      </div>
+      <div class="hero-banner" id="banner">
+        <img src="/static/banner/1.jpg" class="active">
+        <img src="/static/banner/2.jpg">
+        <img src="/static/banner/3.jpg">
+      </div>
+    </div>
+
+    <div class="tool-grid">
+      <div class="tool-card" onclick="openDrawer('merge')">
+        <img src="/static/icons/merge.png">
+        <h3>多文件/单文件合并去重</h3>
+        <p>提供单文件去重与多文件合并去重，通过智能算法精准去重输出唯一结果。</p>
+      </div>
+      <div class="tool-card" onclick="openDrawer('compare')">
+        <img src="/static/icons/compare.png">
+        <h3>A / B 文件对比去重</h3>
+        <p>对两个文件进行对比去重，输出唯一结果文件，支持分别下载。</p>
+      </div>
+      <div class="tool-card" onclick="openDrawer('username')">
+        <img src="/static/icons/username.png">
+        <h3>用户名去重</h3>
+        <p>对用户名列表进行去重处理，去除重复并智能过滤黑名单。</p>
+      </div>
+      <div class="tool-card" onclick="openDrawer('usca')">
+        <img src="/static/icons/usca.png">
+        <h3>US / CA 区分</h3>
+        <p>识别美国与加拿大号码，并分别生成唯一文件下载。</p>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><img src="/static/icons/tool_count.png"><strong>4</strong> 可用工具</div>
+      <div class="stat"><img src="/static/icons/processing.png"><strong>实时</strong> 任务处理</div>
+    </div>
+
+  </main>
 </div>
 
-<!-- 多文件合并去重 -->
-<div class="section">
-<h2>1️⃣ 多文件合并去重</h2>
-<form id="mergeForm" action="/merge" method="post" enctype="multipart/form-data">
-<input type="file" name="files" multiple required>
-<button type="submit">上传并合并去重</button>
-</form>
-<div class="progress-container"><div class="progress-bar" id="mergeProgress">0%</div></div>
-<div class="info" id="mergeInfo"></div>
-<button id="downloadBtn">⬇️ 下载结果</button>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h3 id="drawerTitle"></h3>
+    <span class="close" onclick="closeDrawer()">✖</span>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
 </div>
 
-<!-- A、B 文件对比去重 -->
-<div class="section">
-<h2>2️⃣ A、B 文件对比去重</h2>
-<form id="compareForm" action="/compare" method="post" enctype="multipart/form-data">
-<p>文件 A: <input type="file" name="file_a" required></p>
-<p>文件 B: <input type="file" name="file_b" required></p>
-<button type="submit">上传并对比去重</button>
-</form>
-<div class="progress-container"><div class="progress-bar" id="compareProgress">0%</div></div>
-<div class="info" id="compareInfo"></div>
-<div style="display:flex; gap:10px; margin-top:10px;">
-<button id="downloadABtn">⬇️ 下载 A 结果</button>
-<button id="downloadBBtn">⬇️ 下载 B 结果</button>
-</div>
-</div>
-
-<!-- 单文件用户名去重 -->
-<div class="section">
-<h2>3️⃣ 单文件用户名去重</h2>
-<form id="usernameForm" action="/username_dedup" method="post" enctype="multipart/form-data">
-<input type="file" name="username_file" required>
-<button type="submit">上传并去重</button>
-</form>
-<div class="progress-container"><div class="progress-bar" id="usernameProgress">0%</div></div>
-<div class="info" id="usernameInfo"></div>
-<button id="downloadUsernameBtn">⬇️ 下载去重结果</button>
-</div>
+<div class="modal" id="loginModal">
+  <div class="modal-box">
+    <h3>登录 / 注册</h3>
+    <input placeholder="账号">
+    <input type="password" placeholder="密码">
+    <button>提交</button>
+  </div>
 </div>
 
 <script>
-// ====================== 状态轮询 ======================
-function pollDownload(taskId, btnId, info){
-    const btn = document.getElementById(btnId);
-    const interval = setInterval(()=>{
-        fetch(`/status/${taskId}`)
-        .then(res=>res.json())
-        .then(data=>{
-            if(data.status==="ready"){
-                clearInterval(interval);
-                if(data.download_url_a && data.download_url_b){
-                    info.textContent=`✅ 去重完成，A 文件：${data.count_a} 条，B 文件：${data.count_b} 条`;
-                    document.getElementById('downloadABtn').style.display='block';
-                    document.getElementById('downloadBBtn').style.display='block';
-                    document.getElementById('downloadABtn').onclick=()=>{window.location.href=data.download_url_a;setTimeout(()=>location.reload(),1000);};
-                    document.getElementById('downloadBBtn').onclick=()=>{window.location.href=data.download_url_b;setTimeout(()=>location.reload(),1000);};
-                } else {
-                    info.textContent=`✅ 去重完成，条数：${data.count}`;
-                    btn.style.display='block';
-                    btn.onclick=()=>{window.location.href=data.download_url;setTimeout(()=>location.reload(),1000);};
-                }
-            } else if(data.status==="processing"){
-                info.textContent="⏳ 文件处理中，请稍候...";
-            } else {
-                info.textContent=`❌ ${data.message}`;
-                clearInterval(interval);
+let bannerIndex=0;
+const banners=document.querySelectorAll('#banner img');
+setInterval(()=>{
+  banners[bannerIndex].classList.remove('active');
+  bannerIndex=(bannerIndex+1)%banners.length;
+  banners[bannerIndex].classList.add('active');
+},4000);
+
+function openLogin(){document.getElementById('loginModal').classList.add('show');}
+document.getElementById('loginModal').onclick=e=>{if(e.target.id==='loginModal'){e.target.classList.remove('show');}}
+const drawer=document.getElementById('drawer');
+const drawerBody=document.getElementById('drawerBody');
+const drawerTitle=document.getElementById('drawerTitle');
+function closeDrawer(){drawer.classList.remove('show');}
+
+// =================== 下载轮询 ===================
+function pollDownload(taskId, btnMap, info) {
+  const interval = setInterval(() => {
+    fetch(`/status/${taskId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === "ready") {
+          clearInterval(interval);
+          let countText = "";
+
+          // A/B 对比任务
+          if ("count_A" in data && "count_B" in data) {
+            countText = `，A条数: ${data.count_A}，B条数: ${data.count_B}，总数: ${data.count_source}`;
+          }
+          // US/CA 区分任务
+          else if ("count_US" in data && "count_CA" in data) {
+            countText = `，US条数: ${data.count_US}，CA条数: ${data.count_CA}，总数: ${data.count_source}`;
+          }
+          // 普通去重任务
+          else {
+            countText = `，条数: ${data.count_total}，总数: ${data.count_source}`;
+          }
+
+          info.textContent = `✅ 处理完成${countText}`;
+
+          for (const k in btnMap) {
+            const btn = document.getElementById(btnMap[k]);
+            if (btn && (data[`download_url_${k}`] || data.download_url_default)) {
+              btn.style.display = 'inline-block';
+              // 保留按钮原文字，不覆盖
+              btn.onclick = () => location.href = data[`download_url_${k}`] || data.download_url_default;
             }
-        })
-        .catch(()=>{info.textContent="❌ 状态获取失败"; clearInterval(interval);});
-    },1500);
+          }
+        } else if (data.status === "processing") {
+          info.textContent = `⏳ 处理中：${data.progress || 0}%`;
+        } else {
+          info.textContent = "❌ 失败";
+          clearInterval(interval);
+        }
+      });
+  }, 1500);
 }
 
-// ====================== 上传与进度条 ======================
-function uploadWithPolling(formId, progressId, infoId, btnId){
-    const form=document.getElementById(formId);
-    const progress=document.getElementById(progressId);
-    const info=document.getElementById(infoId);
+function uploadWithPolling(formId, btnMap, infoId, progressId){
+  const form=document.getElementById(formId);
+  const progress=document.getElementById(progressId);
+  const info=document.getElementById(infoId);
 
-    form.addEventListener('submit', function(e){
-        e.preventDefault();
-        const formData=new FormData(form);
-        const xhr=new XMLHttpRequest();
-
-        progress.style.display='block';
-        progress.style.width='0%';
-        progress.textContent='0%';
-        info.textContent='⏳ 正在上传...';
-
-        xhr.upload.onprogress=function(e){
-            if(e.lengthComputable){
-                const percent=Math.round((e.loaded/e.total)*100);
-                progress.style.width=percent+'%';
-                progress.textContent=percent+'%';
-            }
-        };
-
-        xhr.onload=function(){
-            if(xhr.status===200){
-                const res=JSON.parse(xhr.responseText);
-                if(res.status==='success'){
-                    info.textContent='✅ 上传完成，处理中...';
-                    pollDownload(res.task_id, btnId, info);
-                } else {
-                    info.textContent='❌ '+res.message;
-                }
-            } else {
-                info.textContent='❌ 上传失败';
-            }
-        };
-
-        xhr.onerror=function(){
-            info.textContent='❌ 网络错误';
-        };
-
-        xhr.open('POST', form.action, true);
-        xhr.send(formData);
-    });
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const xhr=new XMLHttpRequest();
+    xhr.upload.onprogress=e=>{
+      if(e.lengthComputable){
+        const p=Math.round(e.loaded/e.total*100);
+        progress.style.width=p+"%";
+        progress.textContent=p+"%";
+      }
+    };
+    xhr.onload=()=>{
+      const res=JSON.parse(xhr.responseText);
+      pollDownload(res.task_id,btnMap,info);
+    };
+    xhr.open("POST",form.action);
+    xhr.send(new FormData(form));
+  }
 }
 
-uploadWithPolling('mergeForm','mergeProgress','mergeInfo','downloadBtn');
-uploadWithPolling('compareForm','compareProgress','compareInfo','downloadBtn');
-uploadWithPolling('usernameForm','usernameProgress','usernameInfo','downloadUsernameBtn');
+// =================== 抽屉打开 ===================
+function openDrawer(type){
+  drawer.classList.add('show');
+  let html='';
+  if(type==='merge'){
+    drawerTitle.innerText='多文件合并去重';
+    html=`<form id="mergeForm" action="/merge" enctype="multipart/form-data">
+      <input type="file" name="files" multiple required>
+      <button>上传并处理</button>
+    </form>
+    <div class="progress-container"><div class="progress-bar" id="mergeProgress"></div></div>
+    <div class="info" id="mergeInfo"></div>
+    <div class="download" id="downloadBtn">下载</div>`;
+    drawerBody.innerHTML=html;
+    uploadWithPolling('mergeForm',{default:'downloadBtn'},'mergeInfo','mergeProgress');
+  }
+  if(type==='compare'){
+    drawerTitle.innerText='A / B 对比';
+    html=`<form id="compareForm" action="/compare" enctype="multipart/form-data">
+      <input type="file" name="file_a" required>
+      <input type="file" name="file_b" required>
+      <button>上传并处理</button>
+    </form>
+    <div class="progress-container"><div class="progress-bar" id="compareProgress"></div></div>
+    <div class="info" id="compareInfo"></div>
+    <div class="download" id="downloadABtn">下载 A</div>
+    <div class="download" id="downloadBBtn">下载 B</div>`;
+    drawerBody.innerHTML=html;
+    uploadWithPolling('compareForm',{A:'downloadABtn',B:'downloadBBtn'},'compareInfo','compareProgress');
+  }
+  if(type==='username'){
+    drawerTitle.innerText='用户名去重';
+    html=`<form id="usernameForm" action="/username_dedup" enctype="multipart/form-data">
+      <input type="file" name="username_file" required>
+      <button>上传并处理</button>
+    </form>
+    <div class="progress-container"><div class="progress-bar" id="usernameProgress"></div></div>
+    <div class="info" id="usernameInfo"></div>
+    <div class="download" id="downloadUsernameBtn">下载</div>`;
+    drawerBody.innerHTML=html;
+    uploadWithPolling('usernameForm',{default:'downloadUsernameBtn'},'usernameInfo','usernameProgress');
+  }
+  if(type==='usca'){
+    drawerTitle.innerText='US / CA 区分';
+    html=`<form id="uscaForm" action="/us_ca" enctype="multipart/form-data">
+      <input type="file" name="us_ca_file" required>
+      <button>上传并处理</button>
+    </form>
+    <div class="progress-container"><div class="progress-bar" id="uscaProgress"></div></div>
+    <div class="info" id="uscaInfo"></div>
+    <div class="download" id="downloadUSBtn">下载 US</div>
+    <div class="download" id="downloadCABtn">下载 CA</div>
+    <div class="download" id="downloadOtherBtn">下载 OTHER</div>`;
+    drawerBody.innerHTML=html;
+    uploadWithPolling(
+      'uscaForm',
+      {US:'downloadUSBtn',CA:'downloadCABtn',OTHER:'downloadOtherBtn'},
+      'uscaInfo',
+      'uscaProgress'
+    );
+  }
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Temp
+tmp/
+
+# Test files
+static/*.txt
+
+# Env
+.env
