@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>即时工具平台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{box-sizing:border-box;}
+html,body{
+  margin:0;height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:#f6f7fb;color:#333
+}
+
+/* ===== 顶部 ===== */
+.topbar{
+  height:68px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  gap:24px;
+  padding:0 28px;
+  box-shadow:0 1px 8px rgba(0,0,0,.06);
+}
+.logo{
+  font-size:20px;
+  font-weight:800;
+  color:#1677ff;
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+.logo img{width:32px;height:32px;border-radius:8px}
+
+.search{
+  flex:1;
+  max-width:420px;
+  padding:10px 18px;
+  border-radius:22px;
+  border:1px solid #e6e9f0;
+  background:#f5f7fb;
+  font-size:14px;
+}
+
+/* ===== 顶部按钮 ===== */
+.top-actions{display:flex;align-items:center;gap:12px}
+
+.btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  white-space:nowrap;
+}
+.btn.secondary{
+  height:36px;
+  padding:0 16px;
+  border-radius:18px;
+  font-size:13px;
+  border:1px solid #e6e9f0;
+  background:#f6f8fc;
+  color:#555;
+  cursor:pointer;
+}
+.btn.secondary img{width:14px;height:14px;display:block}
+
+.btn.primary{
+  height:36px;
+  padding:0 20px;
+  border-radius:18px;
+  font-size:14px;
+  font-weight:600;
+  background:linear-gradient(135deg,#1677ff,#4096ff);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  box-shadow:0 6px 14px rgba(22,119,255,.35);
+}
+.btn.primary img{width:16px;height:16px;display:block}
+
+/* ===== 布局 ===== */
+.layout{display:flex;height:calc(100% - 68px)}
+.sidebar{
+  width:200px;
+  background:#fff;
+  border-right:1px solid #eee;
+  padding:18px 14px
+}
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  border-radius:14px;
+  text-decoration:none;
+  color:#444;
+  margin-bottom:8px;
+  font-size:14px
+}
+.sidebar a img{width:20px;height:20px}
+.sidebar a.active{background:#eaf2ff;color:#1677ff;font-weight:600}
+.sidebar a:hover{background:#f2f5ff}
+
+.content{flex:1;padding:28px;overflow:auto}
+
+/* ===== Hero ===== */
+.hero{
+  background:#fff;
+  border-radius:24px;
+  padding:36px;
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:28px
+}
+.hero-text h1{margin:0;font-size:34px}
+.hero-text p{margin-top:14px;color:#666}
+.hero-banner{width:420px;height:180px;border-radius:18px;overflow:hidden}
+.hero-banner img{width:100%;height:100%;object-fit:cover;display:none}
+.hero-banner img.active{display:block}
+
+/* ===== 统计 ===== */
+.stats-row{display:flex;gap:22px;margin-bottom:30px}
+.stat{
+  background:#fff;
+  padding:18px 26px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:13px;
+  box-shadow:0 4px 14px rgba(0,0,0,.04)
+}
+.stat img{width:28px;height:28px}
+.stat strong{font-size:22px}
+
+/* ===== 工具卡片 ===== */
+.tool-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:26px
+}
+.tool-card{
+  background:#fff;
+  border-radius:22px;
+  padding:28px;
+  border:1px solid #f0f0f0;
+  cursor:pointer;
+  transition:.25s
+}
+.tool-card img{width:52px;height:52px;border-radius:12px}
+.tool-card h3{margin:16px 0 8px;font-size:17px}
+.tool-card p{margin:0;font-size:13px;color:#666}
+.tool-card:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(0,0,0,.08)}
+.tool-card.featured{box-shadow:0 12px 26px rgba(0,0,0,.08)}
+
+/* ===== 抽屉 ===== */
+.drawer{
+  position:fixed;top:0;right:-520px;
+  width:520px;height:100%;
+  background:#fff;
+  box-shadow:-10px 0 30px rgba(0,0,0,.15);
+  transition:.3s;z-index:100;
+  display:flex;flex-direction:column
+}
+.drawer.show{right:0}
+.drawer-header{
+  padding:22px;
+  border-bottom:1px solid #eee;
+  display:flex;justify-content:space-between
+}
+.drawer-body{padding:22px;overflow:auto}
+.close{cursor:pointer}
+
+/* ===== 去重工具 UI 补齐（关键）===== */
+.drawer-body input[type=file]{
+  width:100%;
+  padding:11px;
+  margin-top:12px;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+.drawer-body button{
+  width:100%;
+  padding:11px;
+  margin-top:12px;
+  border-radius:10px;
+  background:#1677ff;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+}
+.progress-container{
+  width:100%;
+  height:10px;
+  background:#eef1f6;
+  border-radius:6px;
+  overflow:hidden;
+  margin-top:14px;
+}
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#1677ff,#69b1ff);
+  color:#fff;
+  font-size:11px;
+  text-align:center;
+  line-height:10px;
+}
+.info{
+  margin-top:14px;
+  font-size:13px;
+  color:#555;
+}
+.drawer-body .download{
+  display:none;
+  width:100%;
+  margin-top:12px;
+  padding:11px;
+  border-radius:10px;
+  background:#1677ff;
+  color:#fff;
+  text-align:center;
+  cursor:pointer;
+}
+
+/* ===== 登录 ===== */
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center;
+  z-index:200
+}
+.modal.show{display:flex}
+.modal-box{
+  width:360px;background:#fff;
+  border-radius:22px;padding:26px
+}
+.modal-box input{
+  width:100%;padding:11px;margin-top:14px;
+  border-radius:10px;border:1px solid #ccc
+}
+.modal-box button{
+  margin-top:18px;width:100%;
+  padding:11px;border-radius:10px;
+  background:#1677ff;color:#fff;border:none
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="logo"><img src="/static/icons/logo.png">即时工具</div>
+  <input class="search" placeholder="搜索工具 / 功能">
+  <div class="top-actions">
+    <button class="btn secondary"><img src="/static/icons/discount.png">会员特价</button>
+    <button class="btn secondary"><img src="/static/icons/download.png">客户端下载</button>
+    <button class="btn primary" onclick="openLogin()"><img src="/static/icons/login.png">登录 / 注册</button>
+  </div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+  <a class="active"><img src="/static/icons/home.png">首页</a>
+  <a><img src="/static/icons/tools.png">实用工具</a>
+  <a><img src="/static/icons/file.png">文件处理</a>
+</aside>
+
+<main class="content">
+
+<div class="hero">
+  <div class="hero-text">
+    <h1>高效处理你的数据</h1>
+    <p>文件合并、对比、去重、筛号，一次上传即可完成</p>
+  </div>
+  <div class="hero-banner" id="banner">
+    <img src="/static/banner/1.jpg" class="active">
+    <img src="/static/banner/2.jpg">
+    <img src="/static/banner/3.jpg">
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat"><img src="/static/icons/tool_count.png"><strong>4</strong> 可用工具</div>
+  <div class="stat"><img src="/static/icons/processing.png"><strong>实时</strong> 任务处理</div>
+  <div class="stat"><img src="/static/icons/privacy.png"><strong>本地</strong> 数据不留存</div>
+</div>
+
+<div class="tool-grid">
+  <div class="tool-card featured" onclick="openDrawer('merge')"><img src="/static/icons/merge.png"><h3>多文件合并去重</h3><p>批量合并，智能去重。</p></div>
+  <div class="tool-card featured" onclick="openDrawer('compare')"><img src="/static/icons/compare.png"><h3>A / B 文件对比</h3><p>对比去重，分别下载。</p></div>
+  <div class="tool-card" onclick="openDrawer('username')"><img src="/static/icons/username.png"><h3>用户名去重</h3><p>过滤重复与无效用户名。</p></div>
+  <div class="tool-card" onclick="openDrawer('usca')"><img src="/static/icons/usca.png"><h3>US / CA 区分</h3><p>号码识别并分类导出。</p></div>
+</div>
+
+</main>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h3 id="drawerTitle"></h3>
+    <span class="close" onclick="closeDrawer()">✖</span>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<div class="modal" id="loginModal">
+  <div class="modal-box">
+    <h3>登录 / 注册</h3>
+    <input placeholder="账号">
+    <input type="password" placeholder="密码">
+    <button>提交</button>
+  </div>
+</div>
+
+<script>
+let bi=0;
+const banners=document.querySelectorAll('#banner img');
+setInterval(()=>{
+  banners[bi].classList.remove('active');
+  bi=(bi+1)%banners.length;
+  banners[bi].classList.add('active');
+},4000);
+
+function openLogin(){document.getElementById('loginModal').classList.add('show');}
+document.getElementById('loginModal').onclick=e=>{
+  if(e.target.id==='loginModal') e.target.classList.remove('show');
+}
+
+const drawer=document.getElementById('drawer');
+const drawerBody=document.getElementById('drawerBody');
+const drawerTitle=document.getElementById('drawerTitle');
+function closeDrawer(){drawer.classList.remove('show');}
+
+/* ===== 轮询下载 ===== */
+function pollDownload(taskId, btnMap, info){
+  const timer = setInterval(()=>{
+    fetch(`/status/${taskId}`)
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.status === "ready"){
+          clearInterval(timer);
+
+          let text = "✅ 处理完成";
+
+          // A / B 对比
+          if("count_A" in data && "count_B" in data){
+            text += ` ｜A:${data.count_A} B:${data.count_B}`;
+          }
+
+          // US / CA / OTHER
+          if("count_US" in data && "count_CA" in data){
+            text += ` ｜US:${data.count_US} CA:${data.count_CA}`;
+            if("count_OTHER" in data){
+              text += ` OTHER:${data.count_OTHER}`;
+            }
+          }
+
+          // 普通去重结果
+          if("count_total" in data){
+            text += ` ｜结果:${data.count_total}`;
+          }
+
+          // ⭐ 永远显示原始总条数（关键）
+          if("count_source" in data){
+            text += ` ｜原始:${data.count_source}`;
+          }
+
+          info.textContent = text;
+
+          // 显示下载按钮
+          for(const k in btnMap){
+            const btn = document.getElementById(btnMap[k]);
+            if(btn){
+              btn.style.display = "block";
+              btn.onclick = ()=>{
+                location.href = data[`download_url_${k}`] || data.download_url_default;
+              };
+            }
+          }
+
+        }else if(data.status === "processing"){
+          info.textContent = `⏳ 处理中 ${data.progress || 0}%`;
+        }else{
+          info.textContent = "❌ 处理失败";
+          clearInterval(timer);
+        }
+      });
+  }, 1500);
+}
+
+function uploadWithPolling(formId, btnMap, infoId, progressId){
+  const f=document.getElementById(formId);
+  const p=document.getElementById(progressId);
+  const i=document.getElementById(infoId);
+  f.onsubmit=e=>{
+    e.preventDefault();
+    const x=new XMLHttpRequest();
+    x.upload.onprogress=e=>{
+      if(e.lengthComputable){
+        const v=Math.round(e.loaded/e.total*100);
+        p.style.width=v+"%";p.textContent=v+"%";
+      }
+    };
+    x.onload=()=>pollDownload(JSON.parse(x.responseText).task_id,btnMap,i);
+    x.open("POST",f.action);
+    x.send(new FormData(f));
+  };
+}
+
+function openDrawer(type){
+  drawer.classList.add('show');
+  let h='';
+  if(type==='merge'){
+    drawerTitle.innerText='多文件合并去重';
+    h=`<form id="f1" action="/merge" enctype="multipart/form-data">
+    <input type="file" name="files" multiple required>
+    <button>上传并处理</button></form>
+    <div class="progress-container"><div class="progress-bar" id="p1"></div></div>
+    <div class="info" id="i1"></div>
+    <div class="download" id="d1">下载</div>`;
+    drawerBody.innerHTML=h;
+    uploadWithPolling('f1',{default:'d1'},'i1','p1');
+  }
+  if(type==='compare'){
+    drawerTitle.innerText='A / B 文件对比';
+    h=`<form id="f2" action="/compare" enctype="multipart/form-data">
+    <input type="file" name="file_a" required>
+    <input type="file" name="file_b" required>
+    <button>上传并处理</button></form>
+    <div class="progress-container"><div class="progress-bar" id="p2"></div></div>
+    <div class="info" id="i2"></div>
+    <div class="download" id="da">下载 A</div>
+    <div class="download" id="db">下载 B</div>`;
+    drawerBody.innerHTML=h;
+    uploadWithPolling('f2',{A:'da',B:'db'},'i2','p2');
+  }
+  if(type==='username'){
+    drawerTitle.innerText='用户名去重';
+    h=`<form id="f3" action="/username_dedup" enctype="multipart/form-data">
+    <input type="file" name="username_file" required>
+    <button>上传并处理</button></form>
+    <div class="progress-container"><div class="progress-bar" id="p3"></div></div>
+    <div class="info" id="i3"></div>
+    <div class="download" id="d3">下载</div>`;
+    drawerBody.innerHTML=h;
+    uploadWithPolling('f3',{default:'d3'},'i3','p3');
+  }
+  if(type==='usca'){
+    drawerTitle.innerText='US / CA 区分';
+    h=`<form id="f4" action="/us_ca" enctype="multipart/form-data">
+    <input type="file" name="us_ca_file" required>
+    <button>上传并处理</button></form>
+    <div class="progress-container"><div class="progress-bar" id="p4"></div></div>
+    <div class="info" id="i4"></div>
+    <div class="download" id="dus">下载 US</div>
+    <div class="download" id="dca">下载 CA</div>
+    <div class="download" id="dot">下载 OTHER</div>`;
+    drawerBody.innerHTML=h;
+    uploadWithPolling('f4',{US:'dus',CA:'dca',OTHER:'dot'},'i4','p4');
+  }
+}
+</script>
+
+</body>
+</html>
