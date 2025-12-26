@@ -271,5 +271,20 @@ def download(task_id, key=None):
     else:
         return jsonify({"status":"error","message":"文件不存在"})
 
+# ========= 新增接口：首页统计 =========
+@app.route("/stats")
+def stats():
+    total_tasks = sum(
+        task.get("count_total", 0) +
+        task.get("count_US",0) +
+        task.get("count_CA",0) +
+        task.get("count_OTHER",0)
+        for task in tasks.values()
+    )
+    return jsonify({
+        "total": total_tasks,
+        "tools": 4  # 前端显示工具总数，可根据实际修改
+    })
+
 if __name__=="__main__":
     app.run(debug=True, port=5000)
