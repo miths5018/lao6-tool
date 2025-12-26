@@ -262,9 +262,12 @@ html,body{
 
 <div class="layout">
 <aside class="sidebar">
-  <a class="active"><img src="/static/icons/home.png">首页</a>
-  <a><img src="/static/icons/tools.png">实用工具</a>
-  <a><img src="/static/icons/file.png">文件处理</a>
+  <a class="active" data-type="all"><img src="/static/icons/home.png">首页</a>
+  <a data-type="practical"><img src="/static/icons/tools.png">实用工具</a>
+  <a data-type="empty"><img src="/static/icons/file.png">文件处理</a>
+  <a data-type="empty"><img src="/static/icons/image.png">图片处理</a>
+  <a data-type="empty"><img src="/static/icons/audio.png">音频处理</a>
+  <a data-type="empty"><img src="/static/icons/video.png">视频处理</a>
 </aside>
 
 <main class="content">
@@ -283,15 +286,15 @@ html,body{
 
 <div class="stats-row">
   <div class="stat"><img src="/static/icons/tool_count.png"><strong>4</strong> 可用工具</div>
-  <div class="stat"><img src="/static/icons/processing.png"><strong>实时</strong> 任务处理</div>
+  <div class="stat"><img src="/static/icons/processing.png"><strong id="taskCount">0</strong> 次处理</div>
   <div class="stat"><img src="/static/icons/privacy.png"><strong>本地</strong> 数据不留存</div>
 </div>
 
 <div class="tool-grid">
-  <div class="tool-card featured" onclick="openDrawer('merge')"><img src="/static/icons/merge.png"><h3>多文件合并去重</h3><p>批量合并，智能去重。</p></div>
-  <div class="tool-card featured" onclick="openDrawer('compare')"><img src="/static/icons/compare.png"><h3>A / B 文件对比</h3><p>对比去重，分别下载。</p></div>
-  <div class="tool-card" onclick="openDrawer('username')"><img src="/static/icons/username.png"><h3>用户名去重</h3><p>过滤重复与无效用户名。</p></div>
-  <div class="tool-card" onclick="openDrawer('usca')"><img src="/static/icons/usca.png"><h3>US / CA 区分</h3><p>号码识别并分类导出。</p></div>
+  <div class="tool-card featured" data-category="practical" onclick="openDrawer('merge')"><img src="/static/icons/merge.png"><h3>多文件合并去重</h3><p>批量合并，智能去重。</p></div>
+  <div class="tool-card featured" data-category="practical" onclick="openDrawer('compare')"><img src="/static/icons/compare.png"><h3>A / B 文件对比</h3><p>对比去重，分别下载。</p></div>
+  <div class="tool-card" data-category="practical" onclick="openDrawer('username')"><img src="/static/icons/username.png"><h3>用户名去重</h3><p>过滤重复与无效用户名。</p></div>
+  <div class="tool-card" data-category="practical" onclick="openDrawer('usca')"><img src="/static/icons/usca.png"><h3>US / CA 区分</h3><p>号码识别并分类导出。</p></div>
 </div>
 
 </main>
@@ -461,6 +464,32 @@ function openDrawer(type){
     uploadWithPolling('f4',{US:'dus',CA:'dca',OTHER:'dot'},'i4','p4');
   }
 }
+
+/* ===== 新增：左侧导航分类切换 ===== */
+document.querySelectorAll('.sidebar a').forEach(item=>{
+  item.onclick = ()=>{
+    document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+    item.classList.add('active');
+    const type = item.dataset.type;
+    document.querySelectorAll('.tool-card').forEach(card=>{
+      if(type === 'all'){
+        card.style.display = 'block';
+      }else if(type === 'practical'){
+        card.style.display = card.dataset.category === 'practical' ? 'block' : 'none';
+      }else{
+        card.style.display = 'none';
+      }
+    });
+  }
+});
+
+/* ===== 新增：首页实时任务统计 ===== */
+fetch("/stats")
+  .then(r=>r.json())
+  .then(d=>{
+    document.getElementById("taskCount").innerText = d.total;
+  });
+
 </script>
 
 </body>
