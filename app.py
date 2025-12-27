@@ -11,29 +11,17 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ====== 工具函数 ======
 def clean_line(line: str) -> str:
+    """清理每行文本，去掉空格、特殊字符"""
     if not line:
         return ""
     line = re.sub(r"[\u200b\u200e\u200f\uFEFF\s\u00a0\t]", "", line)
     line = line.lstrip("+@")
     line = unicodedata.normalize('NFKC', line)
-    return line.lower()
+    return line
 
-ENABLE_BLACKLIST = False
-blacklist = ["haihua","chuhai","benchi","818","databox","dolphin","diggoldsl","juejin"]
-
-def is_valid_username(name: str) -> bool:
-    if not name:
-        return False
-    n = name.lower()
-    if n.endswith("bot"):
-        return False
-    if ENABLE_BLACKLIST:
-        if 'bot' in n:
-            return False
-        for word in blacklist:
-            if word in n:
-                return False
-    return True
+def is_valid_line(line: str) -> bool:
+    """判断是否有效行（非空即可）"""
+    return bool(line)
 
 # ====== 任务存储 ======
 tasks = {}
@@ -53,7 +41,7 @@ def process_merge_task(file_paths, task_id):
             for line in f:
                 done += 1
                 c = clean_line(line)
-                if is_valid_username(c) and c not in seen:
+                if is_valid_line(c) and c not in seen:
                     seen.add(c)
                     output_file.write(c+"\n")
                 if done % 1000 == 0:
@@ -68,19 +56,31 @@ def process_merge_task(file_paths, task_id):
 
 def process_compare_task(file_a_path, file_b_path, task_id):
     set_a, set_b = set(), set()
-    total_source = sum(1 for _ in open(file_a_path,"r",encoding="utf-8-sig")) + sum(1 for _ in open(file_b_path,"r",encoding="utf-8-sig"))
+    total_source = sum(1 for _ in open(file_a_path,"r",encoding="utf-8-sig")) + \
+                   sum(1 for _ in open(file_b_path,"r",encoding="utf-8-sig"))
     done = 0
-    # 使用生成器按行处理
-    for path, target_set in [(file_a_path, set_a), (file_b_path, set_b)]:
-        with open(path,"r",encoding="utf-8-sig") as f:
-            for line in f:
-                done += 1
-                c = clean_line(line)
-                if is_valid_username(c):
-                    target_set.add(c)
-                if done % 1000 == 0:
-                    update_progress(task_id, int(done/total_source*50))
-    # 写文件按块写，减少内存
+
+    # 读取 A 文件
+    with open(file_a_path,"r",encoding="utf-8-sig") as f:
+        for line in f:
+            done += 1
+            c = clean_line(line)
+            if is_valid_line(c):
+                set_a.add(c)
+            if done % 1000 == 0:
+                update_progress(task_id, int(done/total_source*50))
+
+    # 读取 B 文件
+    with open(file_b_path,"r",encoding="utf-8-sig") as f:
+        for line in f:
+            done += 1
+            c = clean_line(line)
+            if is_valid_line(c):
+                set_b.add(c)
+            if done % 1000 == 0:
+                update_progress(task_id, int(done/total_source*100))
+
+    # 写文件函数
     def write_set(s, suffix):
         out = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, mode="w", encoding="utf-8")
         for line in sorted(s):
@@ -89,9 +89,10 @@ def process_compare_task(file_a_path, file_b_path, task_id):
         return out.name
 
     file_dict = {
-        "A": write_set(set_a - set_b, "_A.txt"),
-        "B": write_set(set_b - set_a, "_B.txt")
+        "A": write_set(set_a - set_b, "_A.txt"),  # A 文件独有
+        "B": write_set(set_b - set_a, "_B.txt")   # B 文件独有
     }
+
     tasks[task_id].update({
         "file": file_dict,
         "progress": 100,
@@ -109,7 +110,7 @@ def process_username_task(file_path, task_id):
         for line in f:
             done += 1
             c = clean_line(line)
-            if is_valid_username(c) and c not in seen:
+            if is_valid_line(c) and c not in seen:
                 seen.add(c)
                 output_file.write(c+"\n")
             if done % 1000 == 0:
