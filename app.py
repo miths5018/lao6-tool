@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, send_file, jsonify
 import os, tempfile, re, unicodedata, threading, uuid
+from collections import Counter
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
@@ -55,7 +56,7 @@ def process_merge_task(file_paths, task_id):
                 if is_valid_username(c) and c not in seen:
                     seen.add(c)
                     output_file.write(c+"\n")
-                if done % 500 == 0:
+                if done % 1000 == 0:
                     update_progress(task_id, int(done/total_source*100))
     output_file.close()
     tasks[task_id].update({
@@ -69,6 +70,7 @@ def process_compare_task(file_a_path, file_b_path, task_id):
     set_a, set_b = set(), set()
     total_source = sum(1 for _ in open(file_a_path,"r",encoding="utf-8-sig")) + sum(1 for _ in open(file_b_path,"r",encoding="utf-8-sig"))
     done = 0
+    # 使用生成器按行处理
     for path, target_set in [(file_a_path, set_a), (file_b_path, set_b)]:
         with open(path,"r",encoding="utf-8-sig") as f:
             for line in f:
@@ -76,20 +78,25 @@ def process_compare_task(file_a_path, file_b_path, task_id):
                 c = clean_line(line)
                 if is_valid_username(c):
                     target_set.add(c)
-                if done % 500 == 0:
+                if done % 1000 == 0:
                     update_progress(task_id, int(done/total_source*50))
-    unique_a = set_a - set_b
-    unique_b = set_b - set_a
-    out_a = tempfile.NamedTemporaryFile(delete=False, suffix="_A.txt", mode="w", encoding="utf-8")
-    out_b = tempfile.NamedTemporaryFile(delete=False, suffix="_B.txt", mode="w", encoding="utf-8")
-    for line in sorted(unique_a): out_a.write(line+"\n")
-    for line in sorted(unique_b): out_b.write(line+"\n")
-    out_a.close()
-    out_b.close()
+    # 写文件按块写，减少内存
+    def write_set(s, suffix):
+        out = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, mode="w", encoding="utf-8")
+        for line in sorted(s):
+            out.write(line+"\n")
+        out.close()
+        return out.name
+
+    file_dict = {
+        "A": write_set(set_a - set_b, "_A.txt"),
+        "B": write_set(set_b - set_a, "_B.txt")
+    }
     tasks[task_id].update({
-        "file": {"A": out_a.name, "B": out_b.name}, 
-        "progress":100, 
-        "count_total": len(unique_a)+len(unique_b), 
+        "file": file_dict,
+        "progress": 100,
+        "count_total": sum(1 for _ in open(file_dict["A"], "r", encoding="utf-8-sig")) +
+                       sum(1 for _ in open(file_dict["B"], "r", encoding="utf-8-sig")),
         "count_source": total_source
     })
 
@@ -105,7 +112,7 @@ def process_username_task(file_path, task_id):
             if is_valid_username(c) and c not in seen:
                 seen.add(c)
                 output_file.write(c+"\n")
-            if done % 500 == 0:
+            if done % 1000 == 0:
                 update_progress(task_id, int(done/total_source*100))
     output_file.close()
     tasks[task_id].update({
@@ -128,7 +135,7 @@ def classify_number(num: str) -> str:
 
 def process_us_ca_task(file_path, task_id):
     out = {k: tempfile.NamedTemporaryFile(delete=False, suffix=f"_{k}.txt", mode="w", encoding="utf-8") for k in ["US","CA","OTHER"]}
-    counts = {"US":0,"CA":0,"OTHER":0}
+    counts = Counter()
     total_source = sum(1 for _ in open(file_path,"r",encoding="utf-8-sig"))
     done = 0
     with open(file_path,"r",encoding="utf-8-sig") as f:
@@ -139,7 +146,7 @@ def process_us_ca_task(file_path, task_id):
             r = classify_number(c)
             counts[r] += 1
             out[r].write(c+"\n")
-            if done % 500 == 0:
+            if done % 1000 == 0:
                 update_progress(task_id, int(done/total_source*100))
     for f in out.values(): f.close()
     tasks[task_id].update({
@@ -210,7 +217,6 @@ def status(task_id):
     if task.get("progress",0)>=100:
         task["status"]="ready"
 
-    # 针对 A/B 对比任务
     if isinstance(task.get("file"), dict) and "A" in task["file"] and "B" in task["file"]:
         count_a = sum(1 for _ in open(task["file"]["A"], "r", encoding="utf-8-sig"))
         count_b = sum(1 for _ in open(task["file"]["B"], "r", encoding="utf-8-sig"))
@@ -224,7 +230,6 @@ def status(task_id):
             "download_url_B": f"/download/{task_id}/B"
         })
 
-    # 针对 US/CA 区分任务
     if isinstance(task.get("file"), dict) and "US" in task["file"] and "CA" in task["file"]:
         return jsonify({
             "status": task.get("status"),
@@ -238,7 +243,6 @@ def status(task_id):
             "download_url_OTHER": f"/download/{task_id}/OTHER"
         })
 
-    # 默认任务
     return jsonify({
         "status": task.get("status"),
         "progress": task.get("progress",0),
@@ -247,7 +251,6 @@ def status(task_id):
         "download_url_default": f"/download/{task_id}" if isinstance(task.get("file"), str) else None
     })
 
-# ========= 下载 =========
 @app.route("/download/<task_id>")
 @app.route("/download/<task_id>/<key>")
 def download(task_id, key=None):
@@ -271,7 +274,6 @@ def download(task_id, key=None):
     else:
         return jsonify({"status":"error","message":"文件不存在"})
 
-# ========= 新增接口：首页统计 =========
 @app.route("/stats")
 def stats():
     total_tasks = sum(
@@ -283,7 +285,7 @@ def stats():
     )
     return jsonify({
         "total": total_tasks,
-        "tools": 4  # 前端显示工具总数，可根据实际修改
+        "tools": 4
     })
 
 if __name__=="__main__":
