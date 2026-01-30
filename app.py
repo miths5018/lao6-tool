@@ -23,6 +23,42 @@ def is_valid_line(line: str) -> bool:
     """判断是否有效行（非空即可）"""
     return bool(line)
 
+# ====== ✅ 用户名去重专用归一化函数：只要带 bot 就丢弃（不输出） ======
+def normalize_username_for_dedup(line: str) -> str:
+    """
+    规则（按你最新需求）：
+    - clean_line
+    - 不分大小写，只要包含 'bot' → 直接丢弃（返回空串）
+    - 你指定的关键词（客服、出海群、juejin、DigGold、818筛料、duofendata、广告）也同样丢弃
+    - 否则返回清洗后的用户名（统一小写以便去重更稳定）
+    """
+    s = clean_line(line)
+    if not s:
+        return ""
+
+    s_lower = s.lower()
+
+    # 只要包含 bot（不分大小写）→ 丢弃
+    if "bot" in s_lower:
+        return ""
+
+    # 只要包含这些关键词 → 丢弃
+    keywords = [
+        "客服",
+        "出海群",
+        "juejin",
+        "diggold",
+        "818筛料",
+        "duofendata",
+        "广告",
+    ]
+    for kw in keywords:
+        if kw.lower() in s_lower:
+            return ""
+
+    # 返回用于去重的规范值（统一小写）
+    return s_lower
+
 # ====== 任务存储 ======
 tasks = {}
 
@@ -109,7 +145,7 @@ def process_username_task(file_path, task_id):
     with open(file_path,"r",encoding="utf-8-sig") as f:
         for line in f:
             done += 1
-            c = clean_line(line)
+            c = normalize_username_for_dedup(line)
             if is_valid_line(c) and c not in seen:
                 seen.add(c)
                 output_file.write(c+"\n")
